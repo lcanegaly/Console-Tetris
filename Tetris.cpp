@@ -5,22 +5,33 @@
 #include "consolestuff.h"
 #include "matrixmath.h"
 
-class gamepiece* tetri;
+class gamepiece* tetri; 
 clock_t timer; // 
-int cycles = 0; //cycles increased ever tick
-bool gameIsOn = true; //game runs as long as this is true.
 
+/*game control variables*/
+int cycles = 1; //cycles increased every peice landed
+bool gameIsOn = true; //game runs as long as this is true.
+int tickTime = 100; //interval between game ticks. decays as cycles increases
+int decay = 10; //amount to decay per 10 cycles
+int decayFreq = 10; //the number of cycles per decay
 
 
 //function to determine if time elapased is enough to move game objects
 //used to determine fall speed of tetris peices. 
 bool gametick(clock_t &timer) {
 	bool tick;
+	int x = (cycles % decayFreq); //cycles currently on modulo decayfreq, every 10 times decrease ticktime by decay time.
+	if (x == 0) { // every 10 cycles
+
+		tickTime = tickTime - decay; //decay 10 from tickTimer
+		cycles = 1;
+
+	}
 	//check if tick TRUE (last cycle was a tick cycle). Set false and reset
-	if (clock() - timer > 200) {
+	if (clock() - timer > tickTime) {
 		tick = TRUE;
 		timer = clock();
-		cycles++; //increase cycle counter
+
 	}
 	else {
 		tick = FALSE;
@@ -51,6 +62,7 @@ public:
 
 		if (i == 0) { // SET OBJECT TO T SHAPE
 			objectWidth = 4;
+			attrib = 12;
 			//T shape
 			int tShape[] = { 0, 1, 0, 0,
 							 0, 0, 1,-1 };
@@ -62,6 +74,7 @@ public:
 		} else if (i == 1) { // SET OBJECT TO L SHAPE
 
 			objectWidth = 4;
+			attrib = 13;
 			int lShape[] = { 0, 0, 0, 1,
 							 1, 0,-1,-1 };
 
@@ -72,6 +85,7 @@ public:
 		} else if (i == 2) { // SET OBJECT TO REVERSE L SHAPE
 		
 			objectWidth = 4;
+			attrib = 14;
 			int rlShape[] = { 0, 0, 0, -1,
 							 1, 0,-1,-1 };
 
@@ -82,6 +96,7 @@ public:
 		} else if (i == 3) { // SET OBJECT TO REVERSE I SHAPE
 
 			objectWidth = 4;
+			attrib = 15;
 			int iShape[] = { 0, 0, 0, 0,
 							 1, 0,-1,-2 };
 
@@ -92,6 +107,7 @@ public:
 		} else if (i == 4) { // SET OBJECT TO Z SHAPE
 
 			objectWidth = 4;
+			attrib = 11;
 			int zShape[] = { 0, 0, 1, 1,
 							 1, 0, 0,-1 };
 
@@ -102,6 +118,7 @@ public:
 		} else if (i == 5) { // SET OBJECT TO REVERSE Z SHAPE
 
 			objectWidth = 4;
+			attrib = 10;
 			int rzShape[] = { 0, 0,-1,-1,
 							  1, 0, 0,-1 };
 
@@ -112,6 +129,7 @@ public:
 		} else if (i == 6) { // SET OBJECT TO SQUARE SHAPE
 
 			objectWidth = 4;
+			attrib = 18;
 			int sqShape[] = { 0, 0, 1, 1,
 							  1, 0, 0, 1 };
 
@@ -280,7 +298,10 @@ int main() {
 	int x = 0;
 	//Draw Loop
 	while (gameIsOn) {
+
+		cycles = cycles + 1; //increases every time new piece drops
 		tetri[x].status = 2; // update status of current object to falling. 
+
 		while (tetri[x].status == 2) { //while object status is falling.
 			
 			//draw background
