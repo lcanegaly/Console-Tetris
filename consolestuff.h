@@ -6,6 +6,7 @@
 #include <stdlib.h>
 
 const int objectsize = 40;
+const int boardsize = 200;
 
 //screen size
 #define WIDTH 50

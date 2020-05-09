@@ -5,13 +5,17 @@
 #include "consolestuff.h"
 #include "matrixmath.h"
 
+#define COUNT 500
+
+
 class gamepiece* tetri;
+
 clock_t timer; // 
 
 /*game control variables*/
 int cycles = 1; //cycles increased every peice landed
 bool gameIsOn = true; //game runs as long as this is true.
-int tickTime = 100; //interval between game ticks. decays as cycles increases
+int tickTime = 400; //interval between game ticks. decays as cycles increases
 int decay = 10; //amount to decay per 10 cycles
 int decayFreq = 10; //the number of cycles per decay
 
@@ -39,6 +43,36 @@ bool gametick(clock_t& timer) {
 	return tick;
 }
 
+
+class gameboard {
+
+public:
+	int board[boardsize] = {
+							0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+							0, 5, 6, 7, 8, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 0, 5, 6, 7, 8, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29
+	};
+
+
+	int width = 74;
+	int ascii = 219;
+	int attrib = 27;
+
+	void draw() {
+
+		for (int x = 0; x < width; x++) {
+
+			int a = board[x];
+			int b = board[x + width];
+
+			buffy[a + b * WIDTH].Char.AsciiChar = ascii;
+			buffy[a + b * WIDTH].Attributes = attrib;
+
+		}
+
+	}
+	
+}; gameboard gboard;
+
 //Game Object shape
 class gamepiece {
 
@@ -57,6 +91,7 @@ public:
 	bool isActive = TRUE;
 	int status = 1; //1 initialized, 2 falling, 3 collided
 	int location;
+	int rowclear = 0;
 
 	void setType(int i) {
 
@@ -164,9 +199,11 @@ public:
 				accelY = 0; //no longer falling, set to 0 and do not add accel to Y position. 
 				status = 3; //set status to collided
 			}
+			/*
 			if (positionY > HEIGHT - 3) { // if at bottom of screen, set to collided
 				status = 3;
 			}
+			*/
 			else if (!isCollided()) { // if no collision, set positionY with accelY added. 
 				positionY = positionY + accelY;
 			}
@@ -248,6 +285,19 @@ public:
 
 
 	bool isCollided() {
+
+		//loop to check current object against gameboard border
+		for (int a = 0; a < objectWidth; a++) { // for each point in object array's width	
+			for (int c = 0; c < gboard.width; c++) { // for each point in gboard board width
+				if ((collide[a] == gboard.board[c]) && (collide[a + objectWidth] == gboard.board[c + gboard.width])) {
+					return TRUE;
+				}
+			}
+		}
+		
+
+
+		//Loop to check current object against all other landed objects
 		for (int obj = 0; obj < 100; obj++) { // for each object in the object array
 			if (tetri[obj].status == 3) { // if object status is collided (landed)
 				for (int x = 0; x < objectWidth; x++) { //runs 7 times to iterate through x,ys of current object collide[]
@@ -264,6 +314,9 @@ public:
 	}
 
 };
+ 
+
+
 
 
 void drawLanded() {
@@ -278,7 +331,34 @@ void drawLanded() {
 
 }
 
+
+void clearlines() {
+
+	/*
+	for each line of current object that has just landed.
+
+	check each points row
+		for every object
+			check landed object draw array[] for a match to current x/y in base loop. 
+				if a match is found. increment match counter ++. 
+				add object index to match[match counter]
+	if match counter == 14, 
+		row match acheived.
+		for every 14 points in match[]
+			tetri[match[x]].deleteRow(row);
+	else
+		match counter = 0 reset match counter
+		for each 14 points in match[]
+			match[x] = 0; 	
+	*/
+
+
+}
+
 int main() {
+
+	//create gameboard object
+	gameboard gboard;
 
 	//Variables for the gametick function. 
 	//Used to determine if loop cycle allows game object movement. (falling speed etc)
@@ -289,10 +369,12 @@ int main() {
 	//Setup console screen and handles
 	setupscreen();
 
-	tetri = new gamepiece[100];
+	tetri = new gamepiece[500];
+
+
 
 	// set 100 diff pieces in the object array
-	for (int i = 0; i < 99; i++) {
+	for (int i = 0; i < 100; i++) {
 
 		int type = rand() % 7;
 		tetri[i].setType(type);
@@ -304,7 +386,7 @@ int main() {
 	int x = 0;
 	//Draw Loop
 	while (gameIsOn) {
-
+		if (x > 498) { gameIsOn = 0; }
 		cycles = cycles + 1; //increases every time new piece drops
 		tetri[x].status = 2; // update status of current object to falling. 
 
@@ -312,6 +394,9 @@ int main() {
 
 			//draw background
 			background();
+			gboard.draw();
+
+
 			tick = gametick(timer); // see if current cycle is a gametick
 
 			char key = checkInput();
@@ -334,7 +419,7 @@ int main() {
 			tetri[x].move(tick);
 
 			drawLanded();
-
+			clearlines();
 
 			draw();
 			//Sleep(10);
@@ -342,5 +427,11 @@ int main() {
 		}
 		x++;
 	}
+
+	delete[] tetri;
+
 	return 0;
+
+
+
 }
