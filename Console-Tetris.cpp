@@ -15,7 +15,7 @@ clock_t timer; //
 /*game control variables*/
 int cycles = 1; //cycles increased every peice landed
 bool gameIsOn = true; //game runs as long as this is true.
-int tickTime = 400; //interval between game ticks. decays as cycles increases
+int tickTime = 200; //interval between game ticks. decays as cycles increases
 int decay = 10; //amount to decay per 10 cycles
 int decayFreq = 10; //the number of cycles per decay
 
@@ -91,7 +91,6 @@ public:
 	bool isActive = TRUE;
 	int status = 1; //1 initialized, 2 falling, 3 collided
 	int location;
-	int rowclear = 0;
 
 	void setType(int i) {
 
@@ -313,6 +312,21 @@ public:
 		return false; // false, no collision
 	}
 
+	/*function takes in a row number. checks draw[] for matches in that row and deletes them. 
+	For any point that is ABOVE the row in question. move Y point down by 1 to collapse down
+	*/
+	void deleteRow(int row) {
+	
+		for (int d = 0; d < objectWidth; d++) { //for elements in draw
+			if (draw[d + objectWidth] == row) { //if point Y coord is = to row point
+				draw[d + objectWidth] = HEIGHT + 10; // 
+			}
+			else if (draw[d + objectWidth] < row) {
+				draw[d + objectWidth]++; //drow point by 1
+			}
+		}	
+	}
+
 };
  
 
@@ -334,25 +348,34 @@ void drawLanded() {
 
 void clearlines() {
 
-	/*
-	for each line of current object that has just landed.
+	int counter = 0; //counter to see if row matches is 100%
 
-	check each points row
-		for every object
-			check landed object draw array[] for a match to current x/y in base loop. 
-				if a match is found. increment match counter ++. 
-				add object index to match[match counter]
-	if match counter == 14, 
-		row match acheived.
-		for every 14 points in match[]
-			tetri[match[x]].deleteRow(row);
-	else
-		match counter = 0 reset match counter
-		for each 14 points in match[]
-			match[x] = 0; 	
-	*/
+	for (int row = 0; row < HEIGHT; row++) { //for each row
+		for (int col = 2; col < 17; col++) { //for each column in row starting at 2 ending at 15
+		
+			for (int obj = 0; obj < COUNT; obj++) { //for each object in object array
+				if (tetri[obj].status == 3) {
+					for (int i = 0; i < tetri[obj].objectWidth; i++) { // for each point in the object's draw array[]
+						if ((tetri[obj].draw[i] == col) && (tetri[obj].draw[i + tetri[obj].objectWidth] == row)) { //if object draw[] contains match for current row and column.
+							counter++; // increase counter by 1. 
+						}
+					}
+				}
+			}
+		}
 
+		//on current row
+		if (counter > 12) { // if counter is greater than row elements
+			for (int obj = 0; obj < COUNT; obj++) { //for every object in array
+				if (tetri[obj].status == 3) { //if object status is landed
+					tetri[obj].deleteRow(row); //run function to delete rows and move draw elements down by 1 on all objects. 
+				}
+			}
+		}
 
+		counter = 0; // set counter back to 0 before checking next row
+
+	}
 }
 
 int main() {
