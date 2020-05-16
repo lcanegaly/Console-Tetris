@@ -7,6 +7,8 @@
 
 #define COUNT 500
 
+void clearlines();
+void fuck();
 
 class gamepiece* tetri;
 
@@ -47,22 +49,101 @@ bool gametick(clock_t& timer) {
 class gameboard {
 
 public:
-	int board[boardsize] = {
+	char board[boardsize] = {
 							0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
 							0, 5, 6, 7, 8, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 0, 5, 6, 7, 8, 1, 2, 3, 4, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29, 29
 	};
 
+	char scoreboard[22] = { 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+							 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 };
+
+	char scoretxt[11] = {'s', 'c', 'o', 'r', 'e', ' ', '0', '0', '0', '0', '0'};
+
+	int score = 0;
 
 	int width = 74;
 	int ascii = 219;
 	int attrib = 27;
 
-	void draw() {
+	//take in int and return ascii value to write
+	char toAscii(int val) {
+		char sascii = '#';
+		
+		switch (val) {
+			case 0:
+				sascii = '0';
+				break;
+			case 1:
+				sascii = '1';
+				break;
+			case 2:
+				sascii = '2';
+				break;
+			case 3:
+				sascii = '3';
+				break;
+			case 4:
+				sascii = '4';
+				break;
+			case 5:
+				sascii = '5';
+				break;
+			case 6:
+				sascii = '6';
+				break;
+			case 7:
+				sascii = '7';
+				break;
+			case 8:
+				sascii = '8';
+				break;
+			case 9:
+				sascii = '9';
+				break;
+		}
+		return sascii;
+	}
 
+	void draw() {
+		
+		//score updater
+		int result = score;
+		if ((result / 100) > 0) { //score has 3 digits
+			int hundreds = (result / 100); // number of hundreds
+			
+			result = result - (hundreds * 100); // subtract hundreds from results
+			scoretxt[8] = toAscii(hundreds);
+		}
+		if ((result / 10) > 0) { //score has tenths place
+			int tenths = (result / 10); //number of tenths
+			scoretxt[9] = toAscii(tenths);
+			result = result - (tenths * 10);
+		}
+		if ((result / 1) > 0) { //score has one place
+			int ones = (result / 1); //number of ones
+			scoretxt[10] = toAscii(ones);
+		}
+		
+		
+
+
+		//draw scoreboard
+		for (int x = 0; x < 11; x++) {
+
+			int c = scoreboard[x];
+			int d = scoreboard[x + 11];
+
+			buffy[c + d * 22].Char.AsciiChar = scoretxt[x];
+			buffy[c + d * 22].Attributes = attrib;
+
+		}
+
+		//draw gameboard
 		for (int x = 0; x < width; x++) {
 
 			int a = board[x];
 			int b = board[x + width];
+
 
 			buffy[a + b * WIDTH].Char.AsciiChar = ascii;
 			buffy[a + b * WIDTH].Attributes = attrib;
@@ -71,7 +152,8 @@ public:
 
 	}
 	
-}; gameboard gboard;
+};
+gameboard gboard; 
 
 //Game Object shape
 class gamepiece {
@@ -81,14 +163,16 @@ public:
 	int object[objectsize]; //array of object points
 	int draw[objectsize]; //object translated to position if collision not detected
 	int collide[objectsize]; //object translated into position to check for collisions
-	int positionX = 2;
+	int positionX = 7;
 	int positionY = 1;
 	int objectWidth;
 	int ascii = 219;
 	int attrib = 11;
 	int accelY = 1;
 	int accelX = 0;
+	int accelRotate = 0;
 	bool isActive = TRUE;
+	bool drop = false;
 	int status = 1; //1 initialized, 2 falling, 3 collided
 	int location;
 
@@ -183,10 +267,8 @@ public:
 
 	void move(bool tick) {
 
-
-
 		//if cycle is a gametick, move tick Y update first and check for collision
-		if (tick) {
+		if (tick || drop) {
 			for (int x = 0; x < objectWidth; x++) {
 				//Copy object into collide X and Y and add x and Y + accelY positions
 				collide[x] = object[x] + positionX;
@@ -198,11 +280,7 @@ public:
 				accelY = 0; //no longer falling, set to 0 and do not add accel to Y position. 
 				status = 3; //set status to collided
 			}
-			/*
-			if (positionY > HEIGHT - 3) { // if at bottom of screen, set to collided
-				status = 3;
-			}
-			*/
+
 			else if (!isCollided()) { // if no collision, set positionY with accelY added. 
 				positionY = positionY + accelY;
 			}
@@ -211,7 +289,53 @@ public:
 
 
 		//if rotated, move and check for collision. if non write to draw[]. 
+		if (accelRotate != 0) {
 
+			for (int x = 0; x < objectWidth; x++) {
+				//Copy object into collide X and Y
+				collide[x] = object[x];
+				collide[x + objectWidth] = object[x + objectWidth];
+			}
+
+			if (accelRotate > 0) { //rotate right
+				//pass matrix multiplier a pointer to array of object. pass object width param
+				matmul(collide, objectWidth);
+			}
+
+			if (accelRotate < 0) { //rotate left
+				//pass matrix multiplier a pointer to array of object. pass object width param
+				matmul(collide, objectWidth, -1);
+			}
+
+			for (int x = 0; x < objectWidth; x++) {
+				//Copy object into collide X and Y and add x and Y
+				collide[x] = collide[x] + positionX;
+				collide[x + objectWidth] = collide[x + objectWidth] + positionY;
+			}
+
+			//if collision detected, 
+			if (isCollided()) {
+				std::cout << "rotation collision detected" << std::endl;
+			}
+
+			else if (!isCollided()) { // if no collision, set positionY with accelY added. 
+				for (int x = 0; x < objectWidth; x++) {
+					draw[x] = collide[x];
+					draw[x + objectWidth] = collide[x + objectWidth];
+				}
+			
+				if (accelRotate > 0) { //rotate right
+					matmul(object, objectWidth);
+				}
+
+				if (accelRotate < 0) { //rotate left
+					matmul(object, objectWidth, -1);
+				}
+			
+			}
+			accelRotate = 0;
+
+		}
 
 		//positionX = positionX + accelX;			
 
@@ -238,20 +362,26 @@ public:
 			accelX = 0; // Reset acceleration for X movement.
 		}
 
-		for (int x = 0; x < objectWidth; x++) {
-			collide[x] = object[x] + positionX;
-			collide[x + objectWidth] = object[x + objectWidth] + positionY;
+
+		
+		if (!accelRotate) {
+			//move to position
+			for (int x = 0; x < objectWidth; x++) {
+				collide[x] = object[x] + positionX;
+				collide[x + objectWidth] = object[x + objectWidth] + positionY;
+			}
+
+			for (int x = 0; x < objectWidth; x++) {
+				draw[x] = object[x] + positionX;
+				draw[x + objectWidth] = object[x + objectWidth] + positionY;
+			}
 		}
 
-		for (int x = 0; x < objectWidth; x++) {
-			draw[x] = object[x] + positionX;
-			draw[x + objectWidth] = object[x + objectWidth] + positionY;
-		}
-
+		
 		update();
 
 	}
-
+	/*
 	void rotate() { //function to rotate object array points
 		//pass matrix multiplier a pointer to array of object. pass object width param
 		matmul(object, objectWidth);
@@ -262,7 +392,7 @@ public:
 		matmul(object, objectWidth, -1);
 	}
 
-
+	*/
 	// draw array push into buffer. 
 	void update() {
 
@@ -342,17 +472,14 @@ void drawLanded() {
 		}
 
 	}
-
 }
 
 
 void clearlines() {
-
 	int counter = 0; //counter to see if row matches is 100%
-
+	
 	for (int row = 0; row < HEIGHT; row++) { //for each row
-		for (int col = 2; col < 17; col++) { //for each column in row starting at 2 ending at 15
-		
+		for (int col = 1; col < 16; col++) { //for each column in row starting at 2 ending at 15
 			for (int obj = 0; obj < COUNT; obj++) { //for each object in object array
 				if (tetri[obj].status == 3) {
 					for (int i = 0; i < tetri[obj].objectWidth; i++) { // for each point in the object's draw array[]
@@ -365,23 +492,23 @@ void clearlines() {
 		}
 
 		//on current row
-		if (counter > 12) { // if counter is greater than row elements
+		if (counter == 14) { // if counter is greater than row elements
+			gboard.score++; //increase score in gameboard
 			for (int obj = 0; obj < COUNT; obj++) { //for every object in array
 				if (tetri[obj].status == 3) { //if object status is landed
-					tetri[obj].deleteRow(row); //run function to delete rows and move draw elements down by 1 on all objects. 
+					tetri[obj].deleteRow(row); //run function to delete rows and move draw elements down by 1 on all objects.
 				}
 			}
 		}
-
 		counter = 0; // set counter back to 0 before checking next row
-
 	}
 }
+
+
 
 int main() {
 
 	//create gameboard object
-	gameboard gboard;
 
 	//Variables for the gametick function. 
 	//Used to determine if loop cycle allows game object movement. (falling speed etc)
@@ -404,6 +531,7 @@ int main() {
 
 	}
 
+	
 
 
 	int x = 0;
@@ -417,8 +545,8 @@ int main() {
 
 			//draw background
 			background();
+			//draw gameboard
 			gboard.draw();
-
 
 			tick = gametick(timer); // see if current cycle is a gametick
 
@@ -430,10 +558,14 @@ int main() {
 				tetri[x].accelX = 1;
 			}
 			else if ((key == 32) | (key == 46)) {
-				tetri[x].lrotate();
+				tetri[x].accelRotate = -1;
 			}
 			else if (key == 44) {
-				tetri[x].rotate();
+				tetri[x].accelRotate = 1;
+			}
+			else if (key == 98) {
+				tetri[x].drop = true;
+				//gboard.score++;
 			}
 			else if (key == 27) {
 				gameIsOn = false;
@@ -443,18 +575,12 @@ int main() {
 
 			drawLanded();
 			clearlines();
-
 			draw();
-			//Sleep(10);
-
 		}
 		x++;
 	}
-
 	delete[] tetri;
-
 	return 0;
-
-
-
 }
+
+

@@ -153,6 +153,10 @@
   <ItemGroup>
     <ClCompile Include="Console-Tetris.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="consolestuff.h" />
+    <ClInclude Include="matrixmath.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
