@@ -9,7 +9,7 @@ const int objectsize = 40;
 const int boardsize = 200;
 
 //screen size
-#define WIDTH 50
+#define WIDTH 30
 #define HEIGHT 30
 
 
@@ -17,23 +17,30 @@ const int boardsize = 200;
 HANDLE writehandle;
 HANDLE readhandle;
 
+//cursor info struct
+CONSOLE_CURSOR_INFO cursor = {1, false};
+
+
 //input event buffer
 INPUT_RECORD irBuffer[128];
 CHAR_INFO buffy[WIDTH * HEIGHT];
 
 //Screen Size and Write area structures
-SMALL_RECT screenSize = { 0, 0, WIDTH, HEIGHT };
-SMALL_RECT writearea = { 0, 0, WIDTH, HEIGHT };
+SMALL_RECT screenSize = { 0, 0, WIDTH -1 , HEIGHT -1 };
+SMALL_RECT writearea = { 0, 0, WIDTH -1, HEIGHT -1 };
 
 COORD buffersize = { WIDTH, HEIGHT };
 COORD startlocation = { 0, 0 };
+
+//TCHAR title[6];
 
 
 //Setup Console buffer and handle etc.
 void setupscreen() {
 
+	TCHAR title[] = {'T', 'E', 'T', 'R', 'I', 'S', '\0'};
 	 
-
+	SetConsoleTitle(title);
 
 	//Get standard input/output handles
 	readhandle = GetStdHandle(STD_INPUT_HANDLE);
@@ -43,13 +50,13 @@ void setupscreen() {
 	SetConsoleWindowInfo(writehandle, TRUE, &writearea);
 	SetConsoleScreenBufferSize(writehandle, buffersize);
 	SetConsoleMode(readhandle, ENABLE_WINDOW_INPUT);
-
+	SetConsoleCursorInfo(writehandle, &cursor);
 
 	CONSOLE_FONT_INFOEX cfi;
 	cfi.cbSize = sizeof(cfi);
 	cfi.nFont = 0;
-	cfi.dwFontSize.X = 20;
-	cfi.dwFontSize.Y = 20;
+	cfi.dwFontSize.X = 25;
+	cfi.dwFontSize.Y = 25;
 	cfi.FontFamily = FF_DONTCARE; //required for font size/width changes. 
 	cfi.FontWeight = FW_NORMAL;
 
@@ -65,7 +72,6 @@ void setupscreen() {
 
 		}
 	}
-
 }
 
 
@@ -75,9 +81,14 @@ void background() {
 	for (int x = 0; x < WIDTH; x++) {
 		for (int y = 0; y < HEIGHT; y++) {
 
-			buffy[x + WIDTH * y].Char.AsciiChar = 176;
-			buffy[x + WIDTH * y].Attributes = 8;
-
+			if ( x < 15) {
+				buffy[x + WIDTH * y].Char.AsciiChar = 219;
+				buffy[x + WIDTH * y].Attributes = 8;
+			}
+			else {
+			buffy[x + WIDTH * y].Char.AsciiChar = 219;
+			buffy[x + WIDTH * y].Attributes = 7;
+			}
 		}
 	}
 }
