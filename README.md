@@ -1,11 +1,10 @@
 # Console-Tetris
 A C++ console Tetris game to learn coding
 
-Early version. Currently working:
--Random piece generation
--Collisions detected
--Game piece movement 
+Works! mostly. 
+-Controls
   Left = "a"
-  Right = "s"
-  Rotate = ">"
-  RotateCC = "<"
+  Right = "d"
+  Rotate = ">" or "space"
+  Rotate CounterClockwise = "<"
+
