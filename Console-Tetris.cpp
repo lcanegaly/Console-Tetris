@@ -173,6 +173,7 @@ public:
 	int accelRotate = 0;
 	bool isActive = TRUE;
 	bool drop = false;
+	bool down = false;
 	int status = 1; //1 initialized, 2 falling, 3 collided
 	int location;
 
@@ -214,7 +215,7 @@ public:
 			}
 
 		}
-		else if (i == 3) { // SET OBJECT TO REVERSE I SHAPE
+		else if (i == 3) { // SET OBJECT TO I SHAPE
 
 			objectWidth = 4;
 			attrib = 15;
@@ -268,7 +269,7 @@ public:
 	void move(bool tick) {
 
 		//if cycle is a gametick, move tick Y update first and check for collision
-		if (tick || drop) {
+		if (tick || drop || down) {
 			for (int x = 0; x < objectWidth; x++) {
 				//Copy object into collide X and Y and add x and Y + accelY positions
 				collide[x] = object[x] + positionX;
@@ -315,7 +316,7 @@ public:
 
 			//if collision detected, 
 			if (isCollided()) {
-				std::cout << "rotation collision detected" << std::endl;
+				//std::cout << "rotation collision detected" << std::endl;
 			}
 
 			else if (!isCollided()) { // if no collision, set positionY with accelY added. 
@@ -347,7 +348,7 @@ public:
 			}
 
 			if (isCollided()) {
-				std::cout << "collision on X: " << accelX << " ." << positionX << std::endl;
+				//std::cout << "collision on X: " << accelX << " ." << positionX << std::endl;
 				accelX = 0;
 			}
 
@@ -554,7 +555,7 @@ int main() {
 			if (key == 97) {
 				tetri[x].accelX = -1;
 			}
-			else if (key == 115) {
+			else if (key == 100) {
 				tetri[x].accelX = 1;
 			}
 			else if ((key == 32) | (key == 46)) {
@@ -563,15 +564,20 @@ int main() {
 			else if (key == 44) {
 				tetri[x].accelRotate = 1;
 			}
-			else if (key == 98) {
+			else if (key == 119) {
 				tetri[x].drop = true;
-				//gboard.score++;
+			}
+			else if (key == 115) {
+				tetri[x].down = true;
+				tetri[x].move(tick);
 			}
 			else if (key == 27) {
 				gameIsOn = false;
+				break;
 			}
 
 			tetri[x].move(tick);
+			tetri[x].down = false;
 
 			drawLanded();
 			clearlines();
