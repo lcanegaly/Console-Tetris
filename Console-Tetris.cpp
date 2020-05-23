@@ -285,6 +285,7 @@ public:
 			else if (!isCollided()) { // if no collision, set positionY with accelY added. 
 				positionY = positionY + accelY;
 			}
+			down = false; 
 		}
 
 
@@ -378,7 +379,6 @@ public:
 			}
 		}
 
-		
 		update();
 
 	}
@@ -410,6 +410,9 @@ public:
 
 			buffy[location].Char.AsciiChar = ascii;
 			buffy[location].Attributes = attrib;
+			if (location > (WIDTH * 29 - 1)) { //if cell is from pieces dumped on the border when line removed..
+				buffy[location].Attributes = 27; //color match the border. There is prob a better way to do this lol. 
+			}
 		}
 	}
 
@@ -450,7 +453,9 @@ public:
 	
 		for (int d = 0; d < objectWidth; d++) { //for elements in draw
 			if (draw[d + objectWidth] == row) { //if point Y coord is = to row point
-				draw[d + objectWidth] = HEIGHT + 10; // 
+				//draw[d + objectWidth] = HEIGHT + 10; // 
+				draw[d + objectWidth] = HEIGHT - 1;
+				draw[d] = 0;
 			}
 			else if (draw[d + objectWidth] < row) {
 				draw[d + objectWidth]++; //drow point by 1
@@ -525,7 +530,7 @@ int main() {
 
 
 	// set 100 diff pieces in the object array
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 500; i++) {
 
 		int type = rand() % 7;
 		tetri[i].setType(type);
@@ -569,7 +574,6 @@ int main() {
 			}
 			else if (key == 115) {
 				tetri[x].down = true;
-				tetri[x].move(tick);
 			}
 			else if (key == 27) {
 				gameIsOn = false;
@@ -577,7 +581,6 @@ int main() {
 			}
 
 			tetri[x].move(tick);
-			tetri[x].down = false;
 
 			drawLanded();
 			clearlines();
